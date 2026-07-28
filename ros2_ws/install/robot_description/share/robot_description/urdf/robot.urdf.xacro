@@ -1,0 +1,78 @@
+<?xml version="1.0"?>
+<robot name="hil_robot" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- ========================================== -->
+  <!-- ROBOT KINEMATICS & VISUALS                 -->
+  <!-- ========================================== -->
+  
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <box size="0.4 0.3 0.1"/>
+      </geometry>
+      <material name="blue">
+        <color rgba="0 0 0.8 1"/>
+      </material>
+    </visual>
+  </link>
+
+  <link name="left_wheel">
+    <visual>
+      <geometry>
+        <cylinder radius="0.1" length="0.05"/>
+      </geometry>
+      <material name="black">
+        <color rgba="0.1 0.1 0.1 1"/>
+      </material>
+    </visual>
+  </link>
+
+  <link name="right_wheel">
+    <visual>
+      <geometry>
+        <cylinder radius="0.1" length="0.05"/>
+      </geometry>
+      <material name="black">
+        <color rgba="0.1 0.1 0.1 1"/>
+      </material>
+    </visual>
+  </link>
+
+  <joint name="left_wheel_joint" type="continuous">
+    <parent link="base_link"/>
+    <child link="left_wheel"/>
+    <origin xyz="0 0.175 0" rpy="-1.5707 0 0"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+
+  <joint name="right_wheel_joint" type="continuous">
+    <parent link="base_link"/>
+    <child link="right_wheel"/>
+    <origin xyz="0 -0.175 0" rpy="-1.5707 0 0"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+
+  <!-- ========================================== -->
+  <!-- HARDWARE INTERFACE (THE HIL BRIDGE)        -->
+  <!-- ========================================== -->
+
+  <ros2_control name="QemuHILControl" type="system">
+    <hardware>
+      <!-- This plugin name must match the one defined in your qemu_hardware_interface.xml -->
+      <plugin>qemu_hardware_interface/QemuSystemInterface</plugin>
+    </hardware>
+    
+    <joint name="left_wheel_joint">
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+    
+    <joint name="right_wheel_joint">
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+  </ros2_control>
+
+</robot>
