@@ -124,6 +124,18 @@ public:
         cmd.checksum = 0;
 
         // Stream to the ARM Cortex-M7 over TCP
+        static int debug_counter = 0;
+        if (debug_counter++ % 50 == 0) { // Assuming 50Hz update rate, prints once per second
+            RCLCPP_INFO(rclcpp::get_logger("QemuSystemInterface"), 
+                "Sending to QEMU -> Linear: %.2f, Angular: %.2f", linear_velocity, angular_velocity);
+        }
+
+        if (send(sock_fd_, &cmd, sizeof(HIL_Command), MSG_NOSIGNAL) < 0) {
+            RCLCPP_ERROR(rclcpp::get_logger("QemuSystemInterface"), "Failed to send data to QEMU");
+            return hardware_interface::return_type::ERROR;
+        }
+
+        // Stream to the ARM Cortex-M7 over TCP
         if (send(sock_fd_, &cmd, sizeof(HIL_Command), MSG_NOSIGNAL) < 0) {
             RCLCPP_ERROR(rclcpp::get_logger("QemuSystemInterface"), "Failed to send data to QEMU");
             return hardware_interface::return_type::ERROR;
