@@ -7,6 +7,7 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <cstring>
+#include <vector>
 
 // Ensure this matches the struct in firmware/include/hil_protocol.h exactly
 #pragma pack(push, 1)
@@ -26,9 +27,10 @@ private:
     int sock_fd_;
     struct sockaddr_in server_addr_;
     
-    // Internal state tracking
-    double hw_cmd_linear_vel_ = 0.0;
-    double hw_cmd_angular_vel_ = 0.0;
+    // Internal state tracking for 2 wheels (left and right)
+    std::vector<double> hw_commands_{0.0, 0.0};
+    std::vector<double> hw_states_position_{0.0, 0.0};
+    std::vector<double> hw_states_velocity_{0.0, 0.0};
 
 public:
     hardware_interface::CallbackReturn on_init(const hardware_interface::HardwareInfo & info) override
@@ -67,37 +69,62 @@ public:
         return hardware_interface::CallbackReturn::SUCCESS;
     }
 
-    // Map ROS 2 command variables to the internal state
     std::vector<hardware_interface::CommandInterface> export_command_interfaces() override
     {
         std::vector<hardware_interface::CommandInterface> command_interfaces;
-        command_interfaces.emplace_back(hardware_interface::CommandInterface("base", "linear_velocity", &hw_cmd_linear_vel_));
-        command_interfaces.emplace_back(hardware_interface::CommandInterface("base", "angular_velocity", &hw_cmd_angular_vel_));
+        // Dynamically bind to the left and right wheel joints parsed from the URDF
+        for (uint i = 0; i < info_.joints.size(); i++) {
+            command_interfaces.emplace_back(hardware_interface::CommandInterface(
+                info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &hw_commands_[i]));
+        }
         return command_interfaces;
     }
 
     std::vector<hardware_interface::StateInterface> export_state_interfaces() override
     {
-        // For a one-way command bridge, state interfaces can be empty or mock actual states
-        return {};
+        std::vector<hardware_interface::StateInterface> state_interfaces;
+        // Provide the mock states strictly demanded by the URDF
+        for (uint i = 0; i < info_.joints.size(); i++) {
+            state_interfaces.emplace_back(hardware_interface::StateInterface(
+                info_.joints[i].name, hardware_interface::HW_IF_POSITION, &hw_states_position_[i]));
+            state_interfaces.emplace_back(hardware_interface::StateInterface(
+                info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &hw_states_velocity_[i]));
+        }
+        return state_interfaces;
     }
 
     hardware_interface::return_type read(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
     {
-        // In a full bidirectional HIL, you would read encoder ticks from the socket here
+        // Mock state updates so controllers don't fail (assuming perfect execution)
+        for (uint i = 0; i < hw_commands_.size(); i++) {
+            hw_states_velocity_[i] = hw_commands_[i];
+            hw_states_position_[i] += hw_states_velocity_[i] * 0.01; // Assuming ~100Hz update rate
+        }
         return hardware_interface::return_type::OK;
     }
 
     hardware_interface::return_type write(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/) override
     {
+        // Extract wheel speeds (Index 0 = Left, Index 1 = Right based on URDF order)
+        double w_l = hw_commands_[0];
+        double w_r = hw_commands_[1];
+
+        // Kinematics based on your URDF: radius = 0.1m, track width = 0.35m
+        double wheel_radius = 0.1;
+        double track_width = 0.35; 
+
+        // Convert individual wheel velocities back to linear and angular velocities
+        double linear_velocity = wheel_radius * (w_r + w_l) / 2.0;
+        double angular_velocity = wheel_radius * (w_r - w_l) / track_width;
+
         HIL_Command cmd;
         cmd.header = 0xAA;
-        cmd.linear_vel = static_cast<float>(hw_cmd_linear_vel_);
-        cmd.angular_vel = static_cast<float>(hw_cmd_angular_vel_);
-        cmd.checksum = 0; // Simplified for now
+        cmd.linear_vel = static_cast<float>(linear_velocity);
+        cmd.angular_vel = static_cast<float>(angular_velocity);
+        cmd.checksum = 0;
 
-        // Stream the packed struct directly to the ARM Cortex-M7 over TCP
-        if (send(sock_fd_, &cmd, sizeof(HIL_Command), 0) < 0) {
+        // Stream to the ARM Cortex-M7 over TCP
+        if (send(sock_fd_, &cmd, sizeof(HIL_Command), MSG_NOSIGNAL) < 0) {
             RCLCPP_ERROR(rclcpp::get_logger("QemuSystemInterface"), "Failed to send data to QEMU");
             return hardware_interface::return_type::ERROR;
         }
@@ -107,5 +134,7 @@ public:
 };
 } // namespace qemu_hardware_interface
 
-// Export the class as a pluginlib plugin so ROS 2 can load it dynamically
-PLUGINLIB_EXPORT_CLASS(qemu_hardware_interface::QemuSystemInterface, hardware_interface::SystemInterface)
+PLUGINLIB_EXPORT_CLASS(
+    qemu_hardware_interface::QemuSystemInterface, 
+    hardware_interface::SystemInterface
+)

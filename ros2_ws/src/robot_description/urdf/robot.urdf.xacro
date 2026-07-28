@@ -56,7 +56,7 @@
   <!-- HARDWARE INTERFACE (THE HIL BRIDGE)        -->
   <!-- ========================================== -->
 
-  <ros2_control name="QemuHILControl" type="system">
+  <ros2_control name="QemuHardware" type="system">
     <hardware>
       <!-- This plugin name must match the one defined in your qemu_hardware_interface.xml -->
       <plugin>qemu_hardware_interface/QemuSystemInterface</plugin>

@@ -11,10 +11,13 @@ find_package(hardware_interface REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(pluginlib REQUIRED)
 
-# Compile the plugin
-add_library(${PROJECT_NAME} SHARED src/qemu_system_interface.cpp)
-target_include_directories(${PROJECT_NAME} PRIVATE include)
-ament_target_dependencies(${PROJECT_NAME}
+# Add the shared library for the hardware interface plugin
+add_library(qemu_hardware_interface SHARED
+  src/qemu_hardware_interface.cpp
+)
+
+target_include_directories(qemu_hardware_interface PRIVATE include)
+ament_target_dependencies(qemu_hardware_interface
   hardware_interface
   rclcpp
   pluginlib
@@ -24,10 +27,12 @@ ament_target_dependencies(${PROJECT_NAME}
 pluginlib_export_plugin_description_file(hardware_interface qemu_hardware_interface.xml)
 
 # Install rules
-install(TARGETS ${PROJECT_NAME}
+install(TARGETS 
+  qemu_hardware_interface
   DESTINATION lib
 )
-install(FILES qemu_hardware_interface.xml
+install(FILES 
+  qemu_hardware_interface.xml
   DESTINATION share/${PROJECT_NAME}
 )
 

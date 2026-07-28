@@ -22,5 +22,6 @@
   <!-- Defines this package as an ament-based ROS 2 package -->
   <export>
     <build_type>ament_cmake</build_type>
+    <hardware_interface plugin="${prefix}/qemu_hardware_interface.xml"/>
   </export>
 </package>
