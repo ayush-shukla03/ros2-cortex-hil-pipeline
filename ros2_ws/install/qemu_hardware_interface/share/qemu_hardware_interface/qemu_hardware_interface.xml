@@ -1,0 +1,9 @@
+<library path="qemu_hardware_interface">
+  <class name="qemu_hardware_interface/QemuSystemInterface"
+         type="qemu_hardware_interface::QemuSystemInterface"
+         base_class_type="hardware_interface::SystemInterface">
+    <description>
+      A custom hardware interface streaming commands to QEMU via TCP.
+    </description>
+  </class>
+</library>

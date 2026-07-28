@@ -1,0 +1,181 @@
+
+Discarded input sections
+
+ .group         0x0000000000000000        0xc src/main.o
+ .group         0x0000000000000000        0xc src/main.o
+ .group         0x0000000000000000        0xc src/main.o
+ .group         0x0000000000000000        0xc src/uart_driver.o
+ .group         0x0000000000000000        0xc src/uart_driver.o
+ .debug_macro   0x0000000000000000      0xa7e src/uart_driver.o
+ .debug_macro   0x0000000000000000      0x34e src/uart_driver.o
+ .group         0x0000000000000000        0xc src/control_loop.o
+ .group         0x0000000000000000        0xc src/control_loop.o
+ .debug_macro   0x0000000000000000      0xa7e src/control_loop.o
+ .debug_macro   0x0000000000000000      0x34e src/control_loop.o
+ .group         0x0000000000000000        0xc src/startup.o
+ .group         0x0000000000000000        0xc src/startup.o
+ .debug_macro   0x0000000000000000      0xa7e src/startup.o
+ .debug_macro   0x0000000000000000      0x34e src/startup.o
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+FLASH            0x0000000000000000 0x0000000000200000 xr
+RAM              0x0000000020000000 0x0000000000200000 xrw
+*default*        0x0000000000000000 0xffffffffffffffff
+
+Linker script and memory map
+
+LOAD src/main.o
+LOAD src/uart_driver.o
+LOAD src/control_loop.o
+LOAD src/startup.o
+                0x0000000020200000                _estack = (ORIGIN (RAM) + LENGTH (RAM))
+
+.text           0x0000000000000000      0x274
+ *(.isr_vector)
+ .isr_vector    0x0000000000000000       0x40 src/startup.o
+                0x0000000000000000                g_pfnVectors
+ *(.text*)
+ .text          0x0000000000000040       0x74 src/main.o
+                0x0000000000000040                main
+ .text          0x00000000000000b4       0x8c src/uart_driver.o
+                0x00000000000000b4                uart_init
+                0x00000000000000cc                uart_send_char
+                0x00000000000000ea                uart_send_string
+                0x0000000000000116                uart_read_byte
+ .text          0x0000000000000140       0x84 src/control_loop.o
+                0x0000000000000140                calculate_kinematics
+ .text          0x00000000000001c4       0x60 src/startup.o
+                0x00000000000001c4                Default_Handler
+                0x00000000000001ca                Reset_Handler
+ *(.rodata*)
+ .rodata        0x0000000000000224       0x42 src/main.o
+ *fill*         0x0000000000000266        0x2 
+ .rodata        0x0000000000000268        0xc src/uart_driver.o
+                0x0000000000000268                UART0_DATA
+                0x000000000000026c                UART0_STATE
+                0x0000000000000270                UART0_CTRL
+                0x0000000000000274                . = ALIGN (0x4)
+                0x0000000000000274                _etext = .
+
+.glue_7         0x0000000000000274        0x0
+ .glue_7        0x0000000000000274        0x0 linker stubs
+
+.glue_7t        0x0000000000000274        0x0
+ .glue_7t       0x0000000000000274        0x0 linker stubs
+
+.vfp11_veneer   0x0000000000000274        0x0
+ .vfp11_veneer  0x0000000000000274        0x0 linker stubs
+
+.v4_bx          0x0000000000000274        0x0
+ .v4_bx         0x0000000000000274        0x0 linker stubs
+
+.iplt           0x0000000000000274        0x0
+ .iplt          0x0000000000000274        0x0 src/main.o
+
+.rel.dyn        0x0000000000000274        0x0
+ .rel.iplt      0x0000000000000274        0x0 src/main.o
+
+.data           0x0000000020000000        0x0 load address 0x0000000000000274
+                0x0000000020000000                . = ALIGN (0x4)
+                0x0000000020000000                _sdata = .
+ *(.data*)
+ .data          0x0000000020000000        0x0 src/main.o
+ .data          0x0000000020000000        0x0 src/uart_driver.o
+ .data          0x0000000020000000        0x0 src/control_loop.o
+ .data          0x0000000020000000        0x0 src/startup.o
+                0x0000000020000000                . = ALIGN (0x4)
+                0x0000000020000000                _edata = .
+
+.vectors        0x0000000020000000        0x8 load address 0x0000000000000274
+ .vectors       0x0000000020000000        0x8 src/main.o
+                0x0000000020000000                vector_table
+
+.igot.plt       0x0000000020000008        0x0 load address 0x000000000000027c
+ .igot.plt      0x0000000020000008        0x0 src/main.o
+
+.bss            0x0000000020000008        0x0 load address 0x000000000000027c
+                0x0000000020000008                . = ALIGN (0x4)
+                0x0000000020000008                _sbss = .
+ *(.bss*)
+ .bss           0x0000000020000008        0x0 src/main.o
+ .bss           0x0000000020000008        0x0 src/uart_driver.o
+ .bss           0x0000000020000008        0x0 src/control_loop.o
+ .bss           0x0000000020000008        0x0 src/startup.o
+ *(COMMON)
+                0x0000000020000008                . = ALIGN (0x4)
+                0x0000000020000008                _ebss = .
+OUTPUT(firmware.elf elf32-littlearm)
+LOAD linker stubs
+
+.debug_info     0x0000000000000000      0x57d
+ .debug_info    0x0000000000000000      0x19c src/main.o
+ .debug_info    0x000000000000019c      0x150 src/uart_driver.o
+ .debug_info    0x00000000000002ec      0x14d src/control_loop.o
+ .debug_info    0x0000000000000439      0x144 src/startup.o
+
+.debug_abbrev   0x0000000000000000      0x33a
+ .debug_abbrev  0x0000000000000000       0xd8 src/main.o
+ .debug_abbrev  0x00000000000000d8       0xe5 src/uart_driver.o
+ .debug_abbrev  0x00000000000001bd       0x9a src/control_loop.o
+ .debug_abbrev  0x0000000000000257       0xe3 src/startup.o
+
+.debug_aranges  0x0000000000000000       0x80
+ .debug_aranges
+                0x0000000000000000       0x20 src/main.o
+ .debug_aranges
+                0x0000000000000020       0x20 src/uart_driver.o
+ .debug_aranges
+                0x0000000000000040       0x20 src/control_loop.o
+ .debug_aranges
+                0x0000000000000060       0x20 src/startup.o
+
+.debug_macro    0x0000000000000000      0xe89
+ .debug_macro   0x0000000000000000       0x2d src/main.o
+ .debug_macro   0x000000000000002d      0xa7e src/main.o
+ .debug_macro   0x0000000000000aab      0x34e src/main.o
+ .debug_macro   0x0000000000000df9       0x10 src/main.o
+ .debug_macro   0x0000000000000e09       0x36 src/uart_driver.o
+ .debug_macro   0x0000000000000e3f       0x30 src/control_loop.o
+ .debug_macro   0x0000000000000e6f       0x1a src/startup.o
+
+.debug_line     0x0000000000000000      0x334
+ .debug_line    0x0000000000000000       0xe6 src/main.o
+ .debug_line    0x00000000000000e6       0xe3 src/uart_driver.o
+ .debug_line    0x00000000000001c9       0xb5 src/control_loop.o
+ .debug_line    0x000000000000027e       0xb6 src/startup.o
+
+.debug_str      0x0000000000000000     0x3841
+ .debug_str     0x0000000000000000     0x36c2 src/main.o
+                                       0x3825 (size before relaxing)
+ .debug_str     0x00000000000036c2       0xbc src/uart_driver.o
+                                       0x3816 (size before relaxing)
+ .debug_str     0x000000000000377e       0x5c src/control_loop.o
+                                       0x3839 (size before relaxing)
+ .debug_str     0x00000000000037da       0x67 src/startup.o
+                                       0x37ae (size before relaxing)
+
+.comment        0x0000000000000000       0x33
+ .comment       0x0000000000000000       0x33 src/main.o
+                                         0x34 (size before relaxing)
+ .comment       0x0000000000000033       0x34 src/uart_driver.o
+ .comment       0x0000000000000033       0x34 src/control_loop.o
+ .comment       0x0000000000000033       0x34 src/startup.o
+
+.ARM.attributes
+                0x0000000000000000       0x32
+ .ARM.attributes
+                0x0000000000000000       0x32 src/main.o
+ .ARM.attributes
+                0x0000000000000032       0x32 src/uart_driver.o
+ .ARM.attributes
+                0x0000000000000064       0x32 src/control_loop.o
+ .ARM.attributes
+                0x0000000000000096       0x32 src/startup.o
+
+.debug_frame    0x0000000000000000      0x14c
+ .debug_frame   0x0000000000000000       0x30 src/main.o
+ .debug_frame   0x0000000000000030       0x9c src/uart_driver.o
+ .debug_frame   0x00000000000000cc       0x38 src/control_loop.o
+ .debug_frame   0x0000000000000104       0x48 src/startup.o
